@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sticky Note</title>
+    <style>
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        background: #fdf57a;
+        overflow: hidden;
+      }
+      /* Hide scrollbars in any nested scrollable area; the body is a textarea
+         that grows with content, but if the user types past the window we'd
+         rather they resize the window than see chrome. */
+      *::-webkit-scrollbar { display: none; }
+      * { scrollbar-width: none; }
+      /* Caret/selection colors that match a paper note. */
+      textarea, input { caret-color: #2b2410; }
+      ::selection { background: rgba(43, 36, 16, 0.18); }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/renderer.tsx"></script>
+  </body>
+</html>
