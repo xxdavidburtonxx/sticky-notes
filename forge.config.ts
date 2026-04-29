@@ -17,10 +17,11 @@ const config: ForgeConfig = {
     asar: true,
     appBundleId: 'com.davidburton.sticky-notes',
     name: 'Sticky Notes',
+    icon: 'build/icon', // Forge picks .icns on macOS, .ico on Windows
   },
   rebuildConfig: {},
   makers: [
-    new MakerDMG({}, ['darwin']),
+    new MakerDMG({ icon: 'build/icon.icns' }, ['darwin']),
     new MakerZIP({}, ['darwin']),
     new MakerSquirrel({ name: 'sticky-notes' }),
     new MakerDeb({}),

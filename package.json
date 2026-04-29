@@ -1,7 +1,7 @@
 {
   "name": "sticky-notes",
   "productName": "Sticky Notes",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Stickies-style note-taking app for macOS and Windows",
   "main": ".vite/build/main.js",
   "type": "commonjs",
