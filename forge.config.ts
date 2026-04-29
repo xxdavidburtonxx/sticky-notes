@@ -8,6 +8,9 @@ import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-nati
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+// === electron-publisher: publisher import (managed; do not edit) ===
+import { PublisherGithub } from '@electron-forge/publisher-github';
+// === /electron-publisher: publisher import ===
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -42,6 +45,15 @@ const config: ForgeConfig = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  // === electron-publisher: publishers (managed; do not edit) ===
+  publishers: [
+    new PublisherGithub({
+      repository: { owner: 'xxdavidburtonxx', name: 'sticky-notes' },
+      prerelease: false,
+      draft: true,
+    }),
+  ],
+  // === /electron-publisher: publishers ===
 };
 
 export default config;
