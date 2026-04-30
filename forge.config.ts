@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
@@ -18,6 +19,20 @@ const config: ForgeConfig = {
     appBundleId: 'com.davidburton.sticky-notes',
     name: 'Sticky Notes',
     icon: 'build/icon', // Forge picks .icns on macOS, .ico on Windows
+    // === electron-publisher: signing config (managed; do not edit) ===
+    osxSign: {
+      identity: process.env.APPLE_SIGNING_IDENTITY,
+      optionsForFile: () => ({
+        entitlements: 'build/entitlements.mac.plist',
+        hardenedRuntime: true,
+      }),
+    },
+    osxNotarize: {
+      appleApiKey: process.env.APPLE_API_KEY!,
+      appleApiKeyId: process.env.APPLE_API_KEY_ID!,
+      appleApiIssuer: process.env.APPLE_API_ISSUER!,
+    },
+    // === /electron-publisher: signing config ===
   },
   rebuildConfig: {},
   makers: [
@@ -55,6 +70,34 @@ const config: ForgeConfig = {
     }),
   ],
   // === /electron-publisher: publishers ===
+  // === electron-publisher: dmg signing hook (managed; do not edit) ===
+  hooks: {
+    postMake: async (_forgeConfig, makeResults) => {
+      const identity = process.env.APPLE_SIGNING_IDENTITY;
+      const apiKey = process.env.APPLE_API_KEY;
+      const apiKeyId = process.env.APPLE_API_KEY_ID;
+      const apiIssuer = process.env.APPLE_API_ISSUER;
+      if (!identity || !apiKey || !apiKeyId || !apiIssuer) return makeResults;
+
+      for (const result of makeResults) {
+        if (result.platform !== 'darwin') continue;
+        for (const dmg of result.artifacts.filter((a) => a.endsWith('.dmg'))) {
+          console.log(`[postMake] signing ${dmg}`);
+          execFileSync('codesign', ['--sign', identity, '--timestamp', dmg], { stdio: 'inherit' });
+          console.log(`[postMake] notarizing ${dmg} (this can take 1–5 min)`);
+          execFileSync(
+            'xcrun',
+            ['notarytool', 'submit', dmg, '--key', apiKey, '--key-id', apiKeyId, '--issuer', apiIssuer, '--wait'],
+            { stdio: 'inherit' },
+          );
+          console.log(`[postMake] stapling ${dmg}`);
+          execFileSync('xcrun', ['stapler', 'staple', dmg], { stdio: 'inherit' });
+        }
+      }
+      return makeResults;
+    },
+  },
+  // === /electron-publisher: dmg signing hook ===
 };
 
 export default config;
