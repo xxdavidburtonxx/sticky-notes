@@ -2,7 +2,7 @@ import { BrowserWindow } from 'electron';
 import path from 'node:path';
 import { trackWindow } from './windows';
 import { registerExternalLinkHandlers } from './external-links';
-import { readRecord } from './record-store';
+import { readRecord, updateRecordBounds } from './record-store';
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -84,7 +84,30 @@ export function openRecordWindow(
 
   win.once('ready-to-show', () => win.show());
 
+  // Persist x/y/width/height on every move/resize so notes return to the same
+  // position across restarts. Debounced because `move` fires per-pixel during
+  // a drag on Win/Linux.
+  let saveTimer: NodeJS.Timeout | null = null;
+  const persistBounds = () => {
+    if (win.isDestroyed()) return;
+    const [x, y] = win.getPosition();
+    const [width, height] = win.getSize();
+    void updateRecordBounds(recordId, { x, y, width, height });
+  };
+  const scheduleSave = () => {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(persistBounds, 200);
+  };
+  win.on('move', scheduleSave);
+  win.on('resize', scheduleSave);
+
   win.on('close', () => {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    // No final flush: on user-initiated close, onClose deletes the record.
+    // Normal moves/resizes have already been persisted by the debounce timer.
     if (onClose) void onClose(recordId);
     recordToWindow.delete(recordId);
   });

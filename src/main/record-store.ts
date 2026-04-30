@@ -82,6 +82,16 @@ export async function updateRecord(
   });
 }
 
+export async function updateRecordBounds(
+  id: string,
+  bounds: { x: number; y: number; width: number; height: number },
+): Promise<void> {
+  const existing = await readRecord(id);
+  if (!existing) return;
+  // Window-position changes don't bump updatedAt — that field tracks content edits.
+  await writeRecordFile({ ...existing, bounds });
+}
+
 export async function deleteRecord(id: string): Promise<void> {
   try {
     await fs.unlink(recordPath(id));
